@@ -1,0 +1,14 @@
+[package]
+authors = ["Verneri Hirvonen"]
+license = "Apache-2.0"
+name = "decode"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "3.2.16", features = ["derive"] }
+pest = "2.2.1"
+pest_derive = "2.2.1"
+bitvec = "1.0.1"

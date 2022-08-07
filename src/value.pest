@@ -1,0 +1,5 @@
+value = { SOI ~ ( generic_hex_number | generic_dec_number ) ~ EOI }
+    generic_hex_number = { generic_hex_prefix ~ generic_hex_value }
+        generic_hex_prefix = { "0" ~ ^"x" }
+        generic_hex_value = { ASCII_HEX_DIGIT ~ ("_" | ASCII_HEX_DIGIT)* }
+    generic_dec_number = { ASCII_DIGIT+ }
