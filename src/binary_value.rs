@@ -26,8 +26,8 @@ fn push_bits(bv: &mut BitVec<u8, Lsb0>, bits: &[bool]) {
 /// Binary value of arbitrary width that can be unsigned or signed
 #[derive(Debug)]
 pub struct BinaryValue {
-    signedness: Signedness,
-    bits: BitVec<u8, Lsb0>,
+    pub signedness: Signedness,
+    pub bits: BitVec<u8, Lsb0>,
 }
 impl BinaryValue {
     pub fn from(s: &str) -> Result<Self, ()> {
@@ -41,6 +41,7 @@ impl BinaryValue {
     }
     // TODO: refactor
     pub fn from_parse_pairs(parseResult: Pairs<Rule>) -> Self {
+        // TODO: remove peek unwrap atrocity
         let syntaxKind = parseResult.peek().unwrap().into_inner().peek().unwrap();
         println!("{:?}", syntaxKind);
         let mut bits = BitVec::<u8, Lsb0>::new();

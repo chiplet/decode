@@ -1,5 +1,5 @@
 use clap::Parser;
-use decode::binary_value::*;
+use decode::{binary_value::*, riscv::RISCVInstruction};
 use std::process::exit;
 
 #[derive(Parser, Debug)]
@@ -21,4 +21,7 @@ fn main() {
     };
     println!("{:#?}", &binaryValue);
     binaryValue.print();
+
+    let rv = RISCVInstruction::from(&binaryValue);
+    
 }
