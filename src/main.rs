@@ -1,10 +1,8 @@
+use clap::Parser;
+use decode::binary_value::*;
 use std::process::exit;
 
-use clap::Parser as ClapParser;
-use decode::parser::*;
-use pest::Parser as PestParser;
-
-#[derive(ClapParser, Debug)]
+#[derive(Parser, Debug)]
 struct Arguments {
     value: String,
 }
@@ -13,7 +11,7 @@ fn main() {
     let args = Arguments::parse();
     println!("{:?}", args);
 
-    let value = match decode::parser::ValueParser::parse(Rule::value, &args.value) {
+    let binaryValue = match BinaryValue::from(&args.value) {
         Ok(x) => x,
         Err(e) => {
             eprintln!("Could not parse binary value from input: {}", args.value);
@@ -21,8 +19,6 @@ fn main() {
             exit(-1);
         }
     };
-    println!("{:#?}", &value);
-
-    let binaryValue = decode::BinaryValue::from(value);
+    println!("{:#?}", &binaryValue);
     binaryValue.print();
 }
