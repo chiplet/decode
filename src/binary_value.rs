@@ -1,5 +1,3 @@
-use std::fmt::Binary;
-
 use bitvec::prelude::*;
 use pest::{
     iterators::{Pair, Pairs},
@@ -8,8 +6,8 @@ use pest::{
 use pest_derive::Parser;
 
 #[derive(Parser)]
-#[grammar = "value.pest"]
-struct BinaryValueParser;
+#[grammar = "parser/hex_literal.pest"]
+struct HexLiteralParser;
 
 #[derive(Debug)]
 pub enum Signedness {
@@ -31,7 +29,7 @@ pub struct BinaryValue {
 }
 impl BinaryValue {
     pub fn from(s: &str) -> Result<Self, ()> {
-        match BinaryValueParser::parse(Rule::value, s) {
+        match HexLiteralParser::parse(Rule::value, s) {
             Ok(binval) => Ok(BinaryValue::from_parse_pairs(binval)),
             Err(_) => Err(()),
         }
@@ -74,7 +72,7 @@ impl BinaryValue {
                         'd' | 'D' => push_bits(&mut bits, &[true, true, false, true]),
                         'e' | 'E' => push_bits(&mut bits, &[true, true, true, false]),
                         'f' | 'F' => push_bits(&mut bits, &[true, true, true, true]),
-                        _ => panic!("should never happen!"),
+                        _ => unreachable!()
                     }
                 }
                 println!("bits {:?}", bits);

@@ -38,7 +38,13 @@
                     "kind": "bin"
                 }
             },
+            "env": {
+                "RUST_LOG": "debug",
+            },
             "args": [
+                "explain",
+                "--dtype",
+                "f32",
                 "0x20000197",
             ],
             "cwd": "${workspaceFolder}"

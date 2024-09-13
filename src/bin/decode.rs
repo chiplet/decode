@@ -1,27 +1,35 @@
-use clap::Parser;
-use decode::{binary_value::*, riscv::RISCVInstruction};
+use clap::{Parser, Subcommand, ValueEnum};
+use decode::{binary_value::*, commands, dtypes::DataType, riscv::RISCVInstruction};
 use std::process::exit;
 
+
 #[derive(Parser, Debug)]
-struct Arguments {
-    value: String,
+#[command(author, about, long_about = None)]
+struct Args {
+    #[command(subcommand)]
+    command: Commands,
 }
 
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Explain {
+        number: String,
+
+        #[arg(long)]
+        dtype: DataType,
+    }
+}
+
+
+
 fn main() {
-    let args = Arguments::parse();
-    println!("{:?}", args);
+    env_logger::init();
 
-    let binaryValue = match BinaryValue::from(&args.value) {
-        Ok(x) => x,
-        Err(e) => {
-            eprintln!("Could not parse binary value from input: {}", args.value);
-            eprintln!("{:#?}", e);
-            exit(-1);
-        }
-    };
-    println!("{:#?}", &binaryValue);
-    binaryValue.print();
+    let args = Args::parse();
+    log::debug!("{:?}", args);    
 
-    let rv = RISCVInstruction::from(&binaryValue);
+    match args.command {
+        Commands::Explain { number, dtype } => commands::explain(&number, dtype),
+    }
     
 }
