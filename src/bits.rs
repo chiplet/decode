@@ -71,7 +71,7 @@ impl fmt::Display for Bits {
 struct VerilogHexNumberAst {
     size: Option<usize>,
     signed: Option<bool>, // from hex_base
-    hex_value: String, // TODO: or simply hex_digits already at this point?
+    hex_value: Vec<Bit>,
 }
 
 #[derive(Parser)]
@@ -81,55 +81,75 @@ struct VerilogLiteralParser;
 impl Bits {
 
     fn from_verilog_hex(input: &str) -> Result<Bits, pest::error::Error<Rule>> {
-        let mut pair = VerilogLiteralParser::parse(Rule::hex_number, input)?.next().unwrap();
-        println!("pair: {:#?}", pair);
-
-        let mut hex_number_pairs = pair.into_inner();
-        let size_pair = hex_number_pairs.next().unwrap();
-        let base_pair = hex_number_pairs.next().unwrap();
-        let value_pair = hex_number_pairs.next().unwrap();
+        let pairs = VerilogLiteralParser::parse(Rule::hex_number, input)?.next().unwrap().into_inner();
+        println!("pairs: {:#?}", pairs);
 
         let mut bits = Bits::new();
+        let mut size = None;
+        let mut signed = false;
 
-        // size
-        let size = size_pair.as_str().parse::<usize>().unwrap();
-        println!("size: {}", size);
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::size => {
+                    size = Some(pair.as_str().parse::<usize>().unwrap());
+                    println!("size: {:?}", size);
+                },
+                Rule::hex_base => {
+                    if pair.as_str().to_lowercase().contains('s') {
+                        signed = true;
+                    }
+                    let hex_base_str = pair.as_str();
+                    println!("hex_base: {}", hex_base_str);
+                },
+                Rule::hex_value => {
+                    // iterate hex digits from right to left
 
-        // iterate hex digits from right to left
-        for digit in value_pair.into_inner().rev() {
-            match digit.as_rule() {
-                Rule::hex_digit => {
-                    let hex_char = digit.as_str().chars().next().unwrap();
-                    println!("hex_char: {}", hex_char);
-                    let char_bits = match hex_char {
-                        // least-significant comes first in the bit vector
-                        '0'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
-                        '1'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
-                        '2'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
-                        '3'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
-                        '4'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
-                        '5'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
-                        '6'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
-                        '7'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
-                        '8'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
-                        '9'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
-                        'A' | 'a'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
-                        'B' | 'b'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
-                        'C' | 'c'   => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
-                        'D' | 'd'   => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
-                        'E' | 'e'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
-                        'F' | 'f'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
-                        '_' => continue,
-                        _ => unreachable!(),
-                    };
-                    for bit in char_bits {
-                        bits.push(bit);
+                    for digit in pair.into_inner().rev() {
+                        match digit.as_rule() {
+                            Rule::hex_digit => {
+                                let hex_char = digit.as_str().chars().next().unwrap();
+                                println!("hex_char: {}", hex_char);
+                                let char_bits = match hex_char {
+                                    // least-significant comes first in the bit vector
+                                    '0'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
+                                    '1'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
+                                    '2'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
+                                    '3'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
+                                    '4'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
+                                    '5'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
+                                    '6'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
+                                    '7'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
+                                    '8'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
+                                    '9'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
+                                    'A' | 'a'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
+                                    'B' | 'b'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
+                                    'C' | 'c'   => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
+                                    'D' | 'd'   => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
+                                    'E' | 'e'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
+                                    'F' | 'f'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
+                                    '_' => continue,
+                                    _ => unreachable!(),
+                                };
+                                for bit in char_bits {
+                                    bits.push(bit);
+                                }
+                            }
+                            _ => unreachable!(),
+                        }
                     }
                 }
                 _ => unreachable!(),
             }
         }
+
+        // TODO: infer width
+        // - when size is not specified, infer from hex_value
+        // - when size is specified and hex_value is wider, truncate
+        // - when size is specified and hex_value is narrower, fill high-order bits with 0
         
+        // TODO: figure out how the sign affects high-order bits
+        // TODO: do something with `signed` variable
+
         return Ok(bits);
     }
 }
@@ -140,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_from_verilog_hex() {
-        let bits = Bits::from_verilog_hex("'h0").unwrap();
+        let bits = Bits::from_verilog_hex("1'h0").unwrap();
         assert_eq!(bits.to_string(), "0");
         
         let bits = Bits::from_verilog_hex("'h1").unwrap();
