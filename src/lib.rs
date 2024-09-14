@@ -3,6 +3,7 @@ pub mod commands;
 
 // TODO: extract to a separate crate
 pub mod binary_value;
+pub mod bits;
 pub mod dtypes;
 pub mod ieee754;
 pub mod riscv;
