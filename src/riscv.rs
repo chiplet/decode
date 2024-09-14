@@ -1,5 +1,5 @@
-use bitvec::prelude::*;
 use crate::binary_value::BinaryValue;
+use bitvec::prelude::*;
 
 pub enum Opcode {
     LOAD,
@@ -72,9 +72,7 @@ pub enum Instruction {
 
 /// Struct containing all information required to display the associated
 /// RISC-V instruction in a human readable format.
-pub struct RISCVInstruction {
-
-}
+pub struct RISCVInstruction {}
 impl RISCVInstruction {
     pub fn from(binval: &BinaryValue) -> Result<Self, String> {
         match binval.len() {
@@ -86,15 +84,16 @@ impl RISCVInstruction {
                 // RV32I, RV64I
                 let opcode = &binval.bits[0..7];
                 println!("opcode {:#?}", opcode);
-                
+
                 match opcode {
                     // TODO: how to match BitSlice values?
                     _ => todo!(),
                 }
-            },
-            _ => {
-                Err(String::from(format!("Invalid number of bits for a RISC-V instruction: {}", binval.len())))
             }
+            _ => Err(String::from(format!(
+                "Invalid number of bits for a RISC-V instruction: {}",
+                binval.len()
+            ))),
         }
     }
 }

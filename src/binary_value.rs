@@ -41,7 +41,7 @@ impl BinaryValue {
     pub fn from_parse_pairs(parseResult: Pairs<Rule>) -> Self {
         // TODO: remove peek unwrap atrocity
         let syntaxKind = parseResult.peek().unwrap().into_inner().peek().unwrap();
-        println!("{:?}", syntaxKind);
+        log::trace!("{:?}", syntaxKind);
         let mut bits = BitVec::<u8, Lsb0>::new();
         match syntaxKind.as_rule() {
             Rule::generic_hex_number => {
@@ -72,10 +72,11 @@ impl BinaryValue {
                         'd' | 'D' => push_bits(&mut bits, &[true, true, false, true]),
                         'e' | 'E' => push_bits(&mut bits, &[true, true, true, false]),
                         'f' | 'F' => push_bits(&mut bits, &[true, true, true, true]),
-                        _ => unreachable!()
+                        '_' => (),
+                        _ => unreachable!(),
                     }
                 }
-                println!("bits {:?}", bits);
+                log::trace!("bits {bits}");
             }
             _ => unimplemented!("No BinaryValue parser for {:?}", syntaxKind.as_rule()),
         }
