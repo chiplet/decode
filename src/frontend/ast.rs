@@ -18,7 +18,7 @@ pub enum HexDigit {
     C = 12,
     D = 13,
     E = 14,
-    F = 15
+    F = 15,
 }
 
 impl fmt::Display for HexDigit {
@@ -46,8 +46,8 @@ impl fmt::Display for HexDigit {
 }
 
 pub mod verilog {
-    use std::fmt;
     use super::HexDigit;
+    use std::fmt;
 
     #[derive(Debug)]
     pub struct VerilogHexNumberAst {
@@ -64,11 +64,16 @@ pub mod verilog {
                 "".to_string()
             };
             let signed_str = if self.signed { "s" } else { "" };
-            let hex_str: String = self.hex_digits.iter().rev().map(|d| d.to_string()).collect();
+            let hex_str: String = self
+                .hex_digits
+                .iter()
+                .rev()
+                .map(|d| d.to_string())
+                .collect();
             write!(f, "{}'h{}{}", size_str, signed_str, hex_str)
         }
     }
-    
+
     impl VerilogHexNumberAst {
         pub fn new() -> Self {
             Self {
@@ -92,11 +97,17 @@ pub mod verilog {
                     1
                 } else {
                     // count number of non-zero low-order digits
-                    let num_nonzero_lo_digits = self.hex_digits.len() - self.hex_digits.iter().rev().position(|x| *x != HexDigit::Zero).unwrap();
+                    let num_nonzero_lo_digits = self.hex_digits.len()
+                        - self
+                            .hex_digits
+                            .iter()
+                            .rev()
+                            .position(|x| *x != HexDigit::Zero)
+                            .unwrap();
                     let nonzero_lo_digits = &self.hex_digits[0..num_nonzero_lo_digits];
 
                     let (last_digit, lo_digits) = nonzero_lo_digits.split_last().unwrap();
-                    
+
                     let num_last_digit_bits = match last_digit {
                         HexDigit::Zero => unreachable!(),
                         HexDigit::One => 1,
@@ -117,7 +128,7 @@ pub mod verilog {
                     };
 
                     let num_lo_bits = 4 * lo_digits.len();
-                    
+
                     num_lo_bits + num_last_digit_bits
                 }
             })

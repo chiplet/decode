@@ -67,7 +67,8 @@ impl Bits {
     pub fn zext(&mut self, new_len: usize) {
         assert!(new_len > self.len());
         let additional_bits = new_len - self.len();
-        self.bits.extend(std::iter::repeat(Bit::Forcing0).take(additional_bits));
+        self.bits
+            .extend(std::iter::repeat(Bit::Forcing0).take(additional_bits));
     }
 
     /// Sign-extends the `Bits` to the specified length.
@@ -76,7 +77,8 @@ impl Bits {
         if let Some(&last_bit) = self.bits.last() {
             assert!(last_bit == Bit::Forcing0 || last_bit == Bit::Forcing1);
             let additional_bits = new_len - self.len();
-            self.bits.extend(std::iter::repeat(last_bit).take(additional_bits));
+            self.bits
+                .extend(std::iter::repeat(last_bit).take(additional_bits));
         }
     }
 }

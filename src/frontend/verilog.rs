@@ -2,8 +2,8 @@ use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 
 use crate::bits::{Bit, Bits};
-use crate::frontend::ast::HexDigit;
 use crate::frontend::ast::verilog::VerilogHexNumberAst;
+use crate::frontend::ast::HexDigit;
 
 #[derive(Parser)]
 #[grammar = "parser/verilog_number.pest"]
@@ -22,14 +22,14 @@ fn parse_hex_number(pair: Pair<Rule>) -> VerilogHexNumberAst {
             Rule::size => {
                 size = Some(pair.as_str().parse::<usize>().unwrap());
                 log::debug!("size: {:?}", size);
-            },
+            }
             Rule::hex_base => {
                 if pair.as_str().to_lowercase().contains('s') {
                     signed = true;
                 }
                 let hex_base_str = pair.as_str();
                 log::debug!("hex_base: {}", hex_base_str);
-            },
+            }
             Rule::hex_value => {
                 // hex digits are stored in little-endian order so iterate hex digits from right to left
                 for digit in pair.into_inner().rev() {
@@ -38,22 +38,22 @@ fn parse_hex_number(pair: Pair<Rule>) -> VerilogHexNumberAst {
                             let hex_char = digit.as_str().chars().next().unwrap();
                             log::debug!("hex_char: {}", hex_char);
                             let hex_digit = match hex_char {
-                                '0'         => HexDigit::Zero,
-                                '1'         => HexDigit::One,
-                                '2'         => HexDigit::Two,
-                                '3'         => HexDigit::Three,
-                                '4'         => HexDigit::Four,
-                                '5'         => HexDigit::Five,
-                                '6'         => HexDigit::Six,
-                                '7'         => HexDigit::Seven,
-                                '8'         => HexDigit::Eight,
-                                '9'         => HexDigit::Nine,
-                                'A' | 'a'   => HexDigit::A,
-                                'B' | 'b'   => HexDigit::B,
-                                'C' | 'c'   => HexDigit::C,
-                                'D' | 'd'   => HexDigit::D,
-                                'E' | 'e'   => HexDigit::E,
-                                'F' | 'f'   => HexDigit::F,
+                                '0' => HexDigit::Zero,
+                                '1' => HexDigit::One,
+                                '2' => HexDigit::Two,
+                                '3' => HexDigit::Three,
+                                '4' => HexDigit::Four,
+                                '5' => HexDigit::Five,
+                                '6' => HexDigit::Six,
+                                '7' => HexDigit::Seven,
+                                '8' => HexDigit::Eight,
+                                '9' => HexDigit::Nine,
+                                'A' | 'a' => HexDigit::A,
+                                'B' | 'b' => HexDigit::B,
+                                'C' | 'c' => HexDigit::C,
+                                'D' | 'd' => HexDigit::D,
+                                'E' | 'e' => HexDigit::E,
+                                'F' | 'f' => HexDigit::F,
                                 '_' => continue,
                                 _ => unreachable!(),
                             };
@@ -111,11 +111,13 @@ fn verilog_number_to_bits(ast: VerilogHexNumberAst) -> Bits {
         // - when size is specified and hex_value is narrower, fill high-order bits with 0
         bits.zext(num_bits);
     }
-    
+
     // TODO: figure out how the sign affects high-order bits
     // TODO: do something with `signed` variable
     if ast.signed {
-        log::warn!("Signed hex number parsing is not yet fully supported. Results might not be correct.");
+        log::warn!(
+            "Signed hex number parsing is not yet fully supported. Results might not be correct."
+        );
     }
 
     bits
@@ -123,7 +125,9 @@ fn verilog_number_to_bits(ast: VerilogHexNumberAst) -> Bits {
 
 pub fn parse_verilog_number(input: &str) -> Result<Bits, pest::error::Error<Rule>> {
     // let pairs = VerilogNumberParser::parse(Rule::number, input)?.next().unwrap().into_inner();
-    let number = VerilogNumberParser::parse(Rule::number, input)?.next().unwrap();
+    let number = VerilogNumberParser::parse(Rule::number, input)?
+        .next()
+        .unwrap();
     let number = number.into_inner().next().unwrap();
     // println!("number: {:#?}", number);
 
@@ -154,7 +158,13 @@ mod tests {
     #[test]
     fn test_parsed_hex_number_size() {
         fn test_size(input: &str, correct_size: usize) {
-            let hex_number_rule = VerilogNumberParser::parse(Rule::number, input).unwrap().next().unwrap().into_inner().next().unwrap();
+            let hex_number_rule = VerilogNumberParser::parse(Rule::number, input)
+                .unwrap()
+                .next()
+                .unwrap()
+                .into_inner()
+                .next()
+                .unwrap();
             let ast = parse_hex_number(hex_number_rule);
             assert_eq!(ast.size(), correct_size);
         }
@@ -192,7 +202,7 @@ mod tests {
         test_bit_parsing("11'hF03", "11100000011");
         test_bit_parsing("13'hF03", "0111100000011");
         test_bit_parsing("32'h1234_5678", "00010010001101000101011001111000");
-        
+
         // TODO: test bit parsing of signed hex numbers
     }
 }
