@@ -3,7 +3,8 @@ use pest_derive::Parser;
 use std::fmt;
 
 /// Single digital signal bit following the IEEE 1164 representation.
-enum Bit {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Bit {
     Uninitialized,
     ForcingUnknown,
     Forcing0,
@@ -56,6 +57,28 @@ impl Bits {
     pub fn is_empty(&self) -> bool {
         self.bits.is_empty()
     }
+
+    /// Truncates the `Bits` to the specified length.
+    pub fn truncate(&mut self, len: usize) {
+        self.bits.truncate(len);
+    }
+
+    /// Zero-extends the `Bits` to the specified length.
+    pub fn zext(&mut self, new_len: usize) {
+        assert!(new_len > self.len());
+        let additional_bits = new_len - self.len();
+        self.bits.extend(std::iter::repeat(Bit::Forcing0).take(additional_bits));
+    }
+
+    /// Sign-extends the `Bits` to the specified length.
+    pub fn sext(&mut self, new_len: usize) {
+        assert!(new_len > self.len());
+        if let Some(&last_bit) = self.bits.last() {
+            assert!(last_bit == Bit::Forcing0 || last_bit == Bit::Forcing1);
+            let additional_bits = new_len - self.len();
+            self.bits.extend(std::iter::repeat(last_bit).take(additional_bits));
+        }
+    }
 }
 
 impl fmt::Display for Bits {
@@ -68,119 +91,9 @@ impl fmt::Display for Bits {
     }
 }
 
-struct VerilogHexNumberAst {
-    size: Option<usize>,
-    signed: Option<bool>, // from hex_base
-    hex_value: Vec<Bit>,
-}
-
-#[derive(Parser)]
-#[grammar = "parser/verilog_literal.pest"]
-struct VerilogLiteralParser;
-
-impl Bits {
-
-    fn from_verilog_hex(input: &str) -> Result<Bits, pest::error::Error<Rule>> {
-        let pairs = VerilogLiteralParser::parse(Rule::hex_number, input)?.next().unwrap().into_inner();
-        println!("pairs: {:#?}", pairs);
-
-        let mut bits = Bits::new();
-        let mut size = None;
-        let mut signed = false;
-
-        for pair in pairs {
-            match pair.as_rule() {
-                Rule::size => {
-                    size = Some(pair.as_str().parse::<usize>().unwrap());
-                    println!("size: {:?}", size);
-                },
-                Rule::hex_base => {
-                    if pair.as_str().to_lowercase().contains('s') {
-                        signed = true;
-                    }
-                    let hex_base_str = pair.as_str();
-                    println!("hex_base: {}", hex_base_str);
-                },
-                Rule::hex_value => {
-                    // iterate hex digits from right to left
-
-                    for digit in pair.into_inner().rev() {
-                        match digit.as_rule() {
-                            Rule::hex_digit => {
-                                let hex_char = digit.as_str().chars().next().unwrap();
-                                println!("hex_char: {}", hex_char);
-                                let char_bits = match hex_char {
-                                    // least-significant comes first in the bit vector
-                                    '0'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
-                                    '1'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing0],
-                                    '2'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
-                                    '3'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing0],
-                                    '4'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
-                                    '5'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing0],
-                                    '6'         => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
-                                    '7'         => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing0],
-                                    '8'         => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
-                                    '9'         => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing0, Bit::Forcing1],
-                                    'A' | 'a'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
-                                    'B' | 'b'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing0, Bit::Forcing1],
-                                    'C' | 'c'   => vec![Bit::Forcing0, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
-                                    'D' | 'd'   => vec![Bit::Forcing1, Bit::Forcing0, Bit::Forcing1, Bit::Forcing1],
-                                    'E' | 'e'   => vec![Bit::Forcing0, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
-                                    'F' | 'f'   => vec![Bit::Forcing1, Bit::Forcing1, Bit::Forcing1, Bit::Forcing1],
-                                    '_' => continue,
-                                    _ => unreachable!(),
-                                };
-                                for bit in char_bits {
-                                    bits.push(bit);
-                                }
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                }
-                _ => unreachable!(),
-            }
-        }
-
-        // TODO: infer width
-        // - when size is not specified, infer from hex_value
-        // - when size is specified and hex_value is wider, truncate
-        // - when size is specified and hex_value is narrower, fill high-order bits with 0
-        
-        // TODO: figure out how the sign affects high-order bits
-        // TODO: do something with `signed` variable
-
-        return Ok(bits);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_from_verilog_hex() {
-        let bits = Bits::from_verilog_hex("1'h0").unwrap();
-        assert_eq!(bits.to_string(), "0");
-        
-        let bits = Bits::from_verilog_hex("'h1").unwrap();
-        assert_eq!(bits.to_string(), "1");
-        
-        let bits = Bits::from_verilog_hex("'h6").unwrap();
-        assert_eq!(bits.to_string(), "110");
-
-        let bits = Bits::from_verilog_hex("5'h6").unwrap();
-        assert_eq!(bits.to_string(), "00110");
-
-        let bits = Bits::from_verilog_hex("13'hF03").unwrap();
-        assert_eq!(bits.to_string(), "11100000011");
-
-        let bits = Bits::from_verilog_hex("32'h1234_5678").unwrap();
-        assert_eq!(bits.to_string(), "10000111011001010100001100100001");
-        
-        let bits = Bits::from_verilog_hex("5'sH8").unwrap();
-        assert_eq!(bits.to_string(), "11000");
-    }
 
     #[test]
     fn test_bit_display() {

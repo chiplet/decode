@@ -2,6 +2,7 @@
 pub mod commands;
 
 // TODO: extract to a separate crate
+pub mod frontend;
 pub mod binary_value;
 pub mod bits;
 pub mod dtypes;

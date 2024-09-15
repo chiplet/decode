@@ -1,11 +1,13 @@
-complete_match = { SOI ~ number ~ EOI }
-
 number = {
-    octal_number
-    | binary_number
-    | hex_number
-    | decimal_number
-    // real_number
+    SOI ~
+    (
+        octal_number
+        | binary_number
+        | hex_number
+        | decimal_number
+        // real_number
+    )
+    ~ EOI
 }
 
 decimal_number = {
