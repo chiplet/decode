@@ -78,7 +78,10 @@ pub mod verilog {
             }
         }
 
-        /// Number of bits required to represent the hexadecimal number
+        /// Number of bits required to represent the hexadecimal number. If the size was specified
+        /// in verilog syntax it is stored in `size` and that value is returned. If the size was
+        /// not specified, it is inferred from `hex_digits` such as the minimum number of bits required
+        /// to represent the binary number. High-order zeros are ignored when inferring the number of bits.
         pub fn size(&self) -> usize {
             self.size.unwrap_or_else(|| {
                 // infer minimum number of bits required to represent given hex digits
