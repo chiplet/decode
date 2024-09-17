@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use decode::{binary_value::*, commands, dtypes::DataType, riscv::RISCVInstruction};
+use decode::{commands, decoder::dtypes::DataType};
 use std::process::exit;
 
 #[derive(Parser, Debug)]
@@ -26,6 +26,6 @@ fn main() {
     log::debug!("{:?}", args);
 
     match args.command {
-        Commands::Explain { number, dtype } => commands::explain(&number, dtype),
+        Commands::Explain { number, dtype } => commands::explain::explain(&number, dtype),
     }
 }

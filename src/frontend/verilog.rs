@@ -6,7 +6,7 @@ use crate::frontend::ast::verilog::VerilogHexNumberAst;
 use crate::frontend::ast::HexDigit;
 
 #[derive(Parser)]
-#[grammar = "parser/verilog_number.pest"]
+#[grammar = "frontend/parser/verilog_number.pest"]
 struct VerilogNumberParser;
 
 fn parse_hex_number(pair: Pair<Rule>) -> VerilogHexNumberAst {

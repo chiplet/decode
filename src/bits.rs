@@ -1,9 +1,10 @@
 use pest::Parser;
 use pest_derive::Parser;
 use std::fmt;
+use std::ops::Index;
 
 /// Single digital signal bit following the IEEE 1164 representation.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Bit {
     Uninitialized,
     ForcingUnknown,
@@ -33,6 +34,7 @@ impl fmt::Display for Bit {
     }
 }
 
+#[derive(Debug)]
 pub struct Bits {
     bits: Vec<Bit>,
 }
@@ -90,6 +92,14 @@ impl fmt::Display for Bits {
             write!(f, "{}", bit)?;
         }
         Ok(())
+    }
+}
+
+impl<I: std::slice::SliceIndex<[Bit]>> Index<I> for Bits {
+    type Output = I::Output;
+
+    fn index(&self, index: I) -> &Self::Output {
+        &self.bits[index]
     }
 }
 

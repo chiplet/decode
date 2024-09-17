@@ -5,4 +5,5 @@ use clap::ValueEnum;
 pub enum DataType {
     F32,
     F64,
+    RISCV,
 }

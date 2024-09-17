@@ -1,5 +1,6 @@
-use crate::binary_value::BinaryValue;
-use bitvec::prelude::*;
+use std::collections::HashMap;
+
+use crate::{bits::{Bit, Bits}, Fields, IdxRange};
 
 pub enum Opcode {
     LOAD,
@@ -70,30 +71,26 @@ pub enum Instruction {
     SW,
 }
 
-/// Struct containing all information required to display the associated
-/// RISC-V instruction in a human readable format.
-pub struct RISCVInstruction {}
-impl RISCVInstruction {
-    pub fn from(binval: &BinaryValue) -> Result<Self, String> {
-        match binval.len() {
+
+pub struct RISCVDecoder;
+impl<'a> Fields<'a> for RISCVDecoder {
+    fn fields(&self, bits: &'a Bits) -> HashMap<&str, Vec<(&'a [Bit], IdxRange)>> {
+        match bits.len() {
             16 => {
                 // compressed
                 unimplemented!();
-            }
+            },
             32 => {
-                // RV32I, RV64I
-                let opcode = &binval.bits[0..7];
-                println!("opcode {:#?}", opcode);
-
-                match opcode {
-                    // TODO: how to match BitSlice values?
-                    _ => todo!(),
-                }
-            }
-            _ => Err(String::from(format!(
-                "Invalid number of bits for a RISC-V instruction: {}",
-                binval.len()
-            ))),
+                // RV32I
+                let mut riscv_fields = HashMap::new();
+                riscv_fields.insert("opcode", vec![(&bits[0..=6], IdxRange::new(6, 0))]);
+                riscv_fields
+            },
+            64 => {
+                // RV64I
+                unimplemented!();
+            },
+            _ => panic!("Invalid number of bits for a RISC-V instruction: {}", bits.len()),
         }
     }
 }
