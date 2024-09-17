@@ -3,8 +3,8 @@ use std::{collections::HashMap, fmt};
 use bits::{Bit, Bits};
 
 // command-line interface
-pub mod frontend;
 pub mod commands;
+pub mod frontend;
 
 // library
 pub mod bits;
@@ -19,10 +19,7 @@ struct IdxRange {
 impl IdxRange {
     fn new(end: usize, start: usize) -> Self {
         assert!(end >= start);
-        Self {
-            start,
-            end,
-        }
+        Self { start, end }
     }
 }
 impl fmt::Display for IdxRange {

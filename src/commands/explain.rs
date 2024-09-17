@@ -1,6 +1,11 @@
 use std::{collections::HashMap, process::exit};
 
-use crate::{bits::Bits, decoder::{dtypes::DataType, ieee754::F32Decoder, riscv::RISCVDecoder}, frontend::verilog::parse_verilog_number, Fields, IdxRange};
+use crate::{
+    bits::Bits,
+    decoder::{dtypes::DataType, ieee754::F32Decoder, riscv::RISCVDecoder},
+    frontend::verilog::parse_verilog_number,
+    Fields, IdxRange,
+};
 use std::fmt;
 
 pub fn explain(value_str: &str, dtype: DataType) {

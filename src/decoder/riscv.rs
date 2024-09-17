@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::{bits::{Bit, Bits}, Fields, IdxRange};
+use crate::{
+    bits::{Bit, Bits},
+    Fields, IdxRange,
+};
 
 pub enum Opcode {
     LOAD,
@@ -71,7 +74,6 @@ pub enum Instruction {
     SW,
 }
 
-
 pub struct RISCVDecoder;
 impl<'a> Fields<'a> for RISCVDecoder {
     fn fields(&self, bits: &'a Bits) -> HashMap<&str, Vec<(&'a [Bit], IdxRange)>> {
@@ -79,18 +81,21 @@ impl<'a> Fields<'a> for RISCVDecoder {
             16 => {
                 // compressed
                 unimplemented!();
-            },
+            }
             32 => {
                 // RV32I
                 let mut riscv_fields = HashMap::new();
                 riscv_fields.insert("opcode", vec![(&bits[0..=6], IdxRange::new(6, 0))]);
                 riscv_fields
-            },
+            }
             64 => {
                 // RV64I
                 unimplemented!();
-            },
-            _ => panic!("Invalid number of bits for a RISC-V instruction: {}", bits.len()),
+            }
+            _ => panic!(
+                "Invalid number of bits for a RISC-V instruction: {}",
+                bits.len()
+            ),
         }
     }
 }
